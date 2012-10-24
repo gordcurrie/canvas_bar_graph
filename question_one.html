@@ -115,7 +115,6 @@
         var number_of_x_axis_elements = x_axis_array.length;
         var spacing = ((canvas.width - graph_inner_margin * 2) - number_of_x_axis_elements * bar_width) / (number_of_x_axis_elements + 1);
         var height_ratio = (canvas.height - graph_inner_margin * 2)/Math.max.apply(Math, y_axis_array)
-        context.fillStyle = bar_colour;
         //adding the bars
         context.shadowColor = shadows_on;
         for(var i = 0; i < number_of_x_axis_elements; i++) {
