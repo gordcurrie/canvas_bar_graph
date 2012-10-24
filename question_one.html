@@ -1,0 +1,168 @@
+<!doctype html> 
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>question one</title>
+  <script type="text/javascript">
+    function init() {
+      var xml_file = "sales_data.xml";
+      var x_axis_node_name = "month";
+      var x_axis_array = new Array();
+      var y_axis_array = new Array();
+      var canvas = document.getElementById('canvas');
+      var x_axis_label = "MONTH";
+      var y_axis_label = "SALES";
+      var font_family = "px Arial";
+      var font_size = Math.round(canvas.height / 25);
+      var grid_colour = "#DDDDDD";
+      var graph_title = "Sales by Month";
+      var bar_width = 50;
+
+      var xml_doc = loadXml(xml_file);
+      getData(xml_doc);
+      drawGraph();
+
+      //Loads the xml file.
+      function loadXml(input_doc) {
+        if(window.XMLHttpRequest) {
+            var request = new XMLHttpRequest();
+          } else {
+            //XMLHttpRequest doesn't work in IE
+            alert('stop using IE');
+          }
+          try {
+            //parses the xml document and returns a DOM object
+            parser = new DOMParser();
+            request.open("GET", input_doc, false);
+            request.send();
+            var response = request.response;
+            return parser.parseFromString(response, "text/xml");
+            //catch the error chrome will through because you can't load local 
+            //xml files in chrome.
+          } catch (err) {
+            alert("You can't load local XML files in Chrome");
+        }
+      }
+
+      //Gets populates the Data arrays from the DOM object
+      function getData(xml_doc) {
+        var x_axis_elements = xml_doc.getElementsByTagName(x_axis_node_name);
+        //for loop to extract x_axis_elements and sales values
+        for(var i = 0; i < x_axis_elements.length; i++) {
+          var this_element = x_axis_elements[i];
+          x_axis_array[i] = this_element.getAttribute('name');
+          var this_y_element = this_element.childNodes[1];
+          y_axis_array[i] = parseFloat(this_y_element.textContent);
+        }
+      }
+
+      function drawGraph() {
+        var graph_inner_margin = x_axis_start_x = x_axis_start_y = x_axis_end_x = canvas.height * 0.15;
+        var x_axis_end_y = canvas.height - graph_inner_margin;
+        var y_axis_end_x = canvas.width - graph_inner_margin;
+        var context = canvas.getContext('2d');
+
+        //adding axis labels
+        var shadows_off = context.shadowColor;
+        context.shadowColor = '#999999';
+        context.shadowBlur = 5;
+        context.shadowOffsetX = 5;
+        context.shadowOffsetY = 5;
+        context.font = font_size + font_family;
+        var shadows_on = context.shadowColor;
+        //centering x axis text
+        var label_size = context.measureText(x_axis_label);
+        var start = (canvas.width - label_size.width)/2;
+        context.fillText(x_axis_label, start, (canvas.height - canvas.height * 0.01));
+
+        //saving before making y axis label
+        context.save();
+        //rotating canvas
+        context.rotate(-Math.PI/2);
+        label_size = context.measureText(y_axis_label);
+        start = (canvas.height + label_size.width)/2;
+        //centering y axis label
+        context.fillText(y_axis_label, -start, font_size);
+        context.restore();
+
+        //adding title
+        context.font = font_size * 2 + font_family;
+        label_size = context.measureText(graph_title);
+        start = (canvas.width - label_size.width)/2;
+        context.fillText(graph_title, start, font_size * 2);
+        context.shadowColor = shadows_off;
+
+        //calcluating y axis increments
+        var y_axis_increment = (canvas.height - graph_inner_margin * 2)/10;
+        var increment = 0;
+        context.strokeStyle = grid_colour;
+        context.font = Math.round(font_size * 0.5) + font_family;
+        var increment_label_height = Math.max.apply(Math, y_axis_array);
+        var labels_increment = increment_label_height / 10;
+        //drawing grid lines
+        for(var i = 0; i < 10; i++) {
+          context.beginPath();
+          context.moveTo(graph_inner_margin - 5, graph_inner_margin + increment);
+          context.lineTo(y_axis_end_x, graph_inner_margin + increment);
+          context.stroke();
+          context.textAlign = "right";
+          context.fillText(increment_label_height, graph_inner_margin - 7, graph_inner_margin + Math.floor(font_size / 5) + increment)
+          increment += y_axis_increment;
+          increment_label_height -= labels_increment;
+        }
+
+        //figuring out bar spacing
+        var number_of_x_axis_elements = x_axis_array.length;
+        var spacing = ((canvas.width - graph_inner_margin * 2) - number_of_x_axis_elements * bar_width) / (number_of_x_axis_elements + 1);
+        var height_ratio = (canvas.height - graph_inner_margin * 2)/Math.max.apply(Math, y_axis_array)
+        context.fillStyle = bar_colour;
+        //adding the bars
+        context.shadowColor = shadows_on;
+        for(var i = 0; i < number_of_x_axis_elements; i++) {
+          var bar_heigth = y_axis_array[i] * height_ratio;
+          var bar_start_x = (i * bar_width) + ((i + 1) * spacing + graph_inner_margin);
+          var bar_start_y = canvas.height - graph_inner_margin - bar_heigth;
+          //heck might as well add a gradient to the bars
+          var gradient = context.createLinearGradient(bar_start_x, bar_start_y, bar_start_x + bar_width, bar_start_y);
+          //modify the hard coded colours to change the bar colours
+          gradient.addColorStop(0, "#3366FF");
+          gradient.addColorStop(0.5, "#2952CC");
+          gradient.addColorStop(1, "#3366FF");
+          context.fillStyle = gradient;
+          context.fillRect(bar_start_x, bar_start_y, bar_width, bar_heigth);
+        }
+
+        //adding x axis labels
+        context.save();
+        context.rotate(-Math.PI/2);
+        var x_axis_label_increment = spacing + bar_width;
+        var label_spacing = 3 + graph_inner_margin + spacing + Math.round(bar_width/2);
+        for(var i = 0; i < x_axis_array.length; i++) {
+          //getting a little confusing, canvas is rotated and need to work out positioning
+          context.fillText(x_axis_array[i], -x_axis_end_y - 5, label_spacing + x_axis_label_increment * i);
+        }
+        context.restore();
+
+        context.shadowColor = shadows_off;
+        //draw axis
+        context.lineWidth = 1;
+        context.strokeStyle = "#000";
+        context.beginPath();
+        context.moveTo(x_axis_start_x, x_axis_start_y);
+        context.lineTo(x_axis_end_x, x_axis_end_y);
+        context.lineTo(y_axis_end_x, x_axis_end_y);
+        context.stroke();
+      }
+    }
+  </script>
+  <style type="text/css">
+    canvas
+    {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+  <body onload="init()">
+    <canvas id="canvas" width="1000" height="600"></canvas>
+  </body>
+</html>
