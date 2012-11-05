@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<company_sales year="2012">
+  <region name="north">
+    <sales quarter="one">
+      100
+    </sales>
+     <sales quarter="two">
+      200
+    </sales>
+    <sales quarter="three">
+      300
+    </sales>
+    <sales quarter="four">
+      400
+    </sales>
+  </region>
+  <region name="east">
+    <sales quarter="one">
+      200
+    </sales>
+     <sales quarter="two">
+      300
+    </sales>
+    <sales quarter="three">
+      400
+    </sales>
+    <sales quarter="four">
+      900
+    </sales>
+  </region>
+  <region name="south">
+    <sales quarter="one">
+      300
+    </sales>
+     <sales quarter="two">
+      400
+    </sales>
+    <sales quarter="three">
+      500
+    </sales>
+    <sales quarter="four">
+      600
+    </sales>
+  </region>
+  <region name="west">
+    <sales quarter="one">
+      400
+    </sales>
+     <sales quarter="two">
+      500
+    </sales>
+    <sales quarter="three">
+      600
+    </sales>
+    <sales quarter="four">
+      700
+    </sales>
+  </region>
+</company_sales>

@@ -1,0 +1,158 @@
+<!doctype html> 
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>question two</title>
+  <script type="text/javascript">
+    var xml_file = "sales_data_2.xml";
+    var x_axis_node_name = "region";
+    var region_array = [];
+    var q_one_array = [];
+    var q_two_array = [];
+    var q_three_array = [];
+    var q_four_array = [];
+    var colour_array = ["#FF0000", "#0066FF", "#00FF00", "#FFFF00"];
+    var font_family = "px Arial";
+    var canvas;
+    var context;
+    var font_size;
+    var array_to_use;
+    var graph_title = "Sales by Quarter"
+
+    function init() {
+      canvas = document.getElementById('canvas');
+      context = canvas.getContext('2d');
+      font_size = Math.round(canvas.height / 25);
+      var xml_doc = loadXml(xml_file);
+      getData(xml_doc);
+
+      //Loads the xml file.
+      function loadXml(input_doc) {
+        if(window.XMLHttpRequest) {
+            var request = new XMLHttpRequest();
+          } else {
+            //XMLHttpRequest doesn't work in IE
+            alert('stop using IE');
+          }
+          try {
+            //parses the xml document and returns a DOM object
+            parser = new DOMParser();
+            request.open("GET", input_doc, false);
+            request.send();
+            var response = request.response;
+            return parser.parseFromString(response, "text/xml");
+            //catch the error chrome will through because you can't load local 
+            //xml files in chrome.
+          } catch (err) {
+            alert("You can't load local XML files in Chrome");
+        }
+      }
+
+      //Gets populates the Data arrays from the DOM object
+      function getData(xml_doc) {
+        var x_axis_elements = xml_doc.getElementsByTagName(x_axis_node_name);
+        //for loop to extract x_axis_elements and sales values
+        for(var i = 0; i < x_axis_elements.length; i++) {
+          var this_element = x_axis_elements[i];
+          region_array[i] = this_element.getAttribute('name');
+          var sales_nodes = this_element.getElementsByTagName('sales');
+          //extract each quarter from each region
+          var j = 0;
+          q_one_array[i] = parseFloat(sales_nodes[j].textContent);
+          j++;
+          q_two_array[i] = parseFloat(sales_nodes[j].textContent);
+          j++;
+          q_three_array[i] = parseFloat(sales_nodes[j].textContent);
+          j++;
+          q_four_array[i] = parseFloat(sales_nodes[j].textContent);
+        }
+      }
+    }
+
+    function update_graph() {
+      var selected_quarter = document.getElementById("quarter_selector").value;
+      //clearing things to start
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      //setting up shadows for use
+      var shadows_off = context.shadowColor;
+      context.shadowColor = '#999999';
+      context.shadowBlur = 5;
+      context.shadowOffsetX = 5;
+      context.shadowOffsetY = 5;
+      var shadows_on = context.shadowColor;
+      context.shadowColor = shadows_off;
+      //picking the right array to use
+      if (selected_quarter == "1") {
+        array_to_use = q_one_array;
+      } else if (selected_quarter == "2") {
+        array_to_use = q_two_array;
+      } else if (selected_quarter == "3") {
+        array_to_use = q_three_array;
+      } else {
+        array_to_use = q_four_array;
+      }
+      var total_sales = 0;
+      //calcluating total sales
+      for (var i = 0; i < array_to_use.length; i++) {
+        total_sales += array_to_use[i];
+      }
+      //positioning stuff
+      var total_angle = 0;
+      var center_x = canvas.width / 2;
+      var center_y = canvas.height / 2;
+      var legend_x = canvas.width * 0.75;
+      var legend_y = canvas.height * 0.66;
+
+      //adding title
+      context.shadowColor = shadows_on;
+      context.font = font_size * 2 + font_family;
+      label_size = context.measureText(graph_title);
+      start = (canvas.width - label_size.width)/2;
+      context.fillText(graph_title, start, font_size * 2);
+      context.shadowColor = shadows_off;
+      context.font = font_size * 0.75 + font_family;
+      //creating each slice of the pie
+      for (var i = 0; i < array_to_use.length; i++) {
+        var region_size = (array_to_use[i] * Math.PI * 2)/total_sales;
+        context.fillStyle = colour_array[i];
+        context.beginPath();
+        context.moveTo(center_x, center_y);
+        context.arc(center_x, center_y, canvas.height/3, total_angle, total_angle + region_size, false);
+        context.lineTo(center_x, center_y);
+        context.fill();
+
+        //legend info
+        context.shadowColor = shadows_on;
+        context.beginPath();
+        context.rect(legend_x, legend_y, font_size, font_size);
+        context.fill();
+        //legend text
+        context.fillStyle = "#000000";
+        context.fillText(region_array[i].toUpperCase() + " : $" + array_to_use[i] + " million", legend_x + font_size * 1.5, legend_y + font_size - font_size/3);
+        context.shadowColor = shadows_off;
+
+        legend_y += font_size * 2;
+        total_angle += region_size;
+      }
+    }
+
+  </script>
+  <style type="text/css">
+    canvas
+    {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+  <body onload="init(); update_graph();">
+    <canvas id="canvas" width="800" height="500"></canvas>
+    <div>
+      <select id="quarter_selector" onchange="update_graph();">
+        <option value="1">Q1</option>
+        <option value="2">Q2</option>
+        <option value="3">Q3</option>
+        <option value="4">Q4</option>
+      </select>
+    </div>
+  </body>
+</html>
